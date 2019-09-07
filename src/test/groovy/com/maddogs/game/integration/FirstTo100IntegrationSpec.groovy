@@ -15,7 +15,7 @@ import org.springframework.http.MediaType
 import spock.lang.Specification
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class FirstTo100ApplicationSpecIT extends Specification {
+class FirstTo100IntegrationSpec extends Specification {
 
     @Autowired
     TestRestTemplate testRestTemplate
@@ -48,12 +48,6 @@ class FirstTo100ApplicationSpecIT extends Specification {
     def cleanup() {
         teamRepository.deleteAll()
         questionRepository.deleteAll()
-    }
-
-    def "application starts"() {
-        when: "the application starts up"
-        then: "there are no errors"
-        noExceptionThrown()
     }
 
     def "Test sending a challenge"() {
@@ -106,7 +100,7 @@ class FirstTo100ApplicationSpecIT extends Specification {
 
         when: "request is sent"
         def response = post("/question/" + question.getQuestionId() + "/team/" + team.getTeamId(),
-        """
+                """
         {
             "answer": "Sausages"
         }
