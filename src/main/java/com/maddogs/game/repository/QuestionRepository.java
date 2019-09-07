@@ -1,0 +1,13 @@
+package com.maddogs.game.repository;
+
+import com.maddogs.game.model.Question;
+import com.maddogs.game.model.Team;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+public interface QuestionRepository extends JpaRepository<Question, String> {
+    @Query("SELECT u FROM Question u order by function('RAND')")
+    Question findRandomQuestion();
+
+    Question findByQuestion(String question);
+}
