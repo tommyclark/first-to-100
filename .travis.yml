@@ -4,4 +4,5 @@ jdk:
 deploy:
   provider: heroku
   api_key: $HEROKU_KEY
+  app: first-to-100-game
   on: master
