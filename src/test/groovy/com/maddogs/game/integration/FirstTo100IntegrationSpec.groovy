@@ -1,10 +1,11 @@
-package com.maddogs.game
+package com.maddogs.game.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.maddogs.game.model.Question
 import com.maddogs.game.model.Team
 import com.maddogs.game.repository.QuestionRepository
 import com.maddogs.game.repository.TeamRepository
+import org.skyscreamer.jsonassert.JSONAssert
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -130,6 +131,78 @@ class FirstTo100IntegrationSpec extends Specification {
 
         and: "The team gains a point"
         teamRepository.findById(team.getTeamId()).get().getPoints() == points
+    }
+
+    def "Test sending a team"() {
+        when: "request is sent"
+        def response = post("/team", """
+            { 
+                "name": "sausage-team"
+            }
+        """)
+
+        then: "a status code of 200 is returned"
+        response.status == 200
+
+        and: "The team has been saved"
+        teamRepository.findByName("sausage-team") instanceof Team
+    }
+
+    def "Test getting a team by name"() {
+        given: "Some expected json"
+        String expectedJson = """
+        {
+            "teamId": ${team.teamId},
+            "name": ${team.name},
+            "challengeNumber": ${team.challengeNumber},
+            "points": ${team.points},
+            "totalPoints": ${team.totalPoints}
+        }
+        """
+
+        when: "request is sent"
+        def response = get("/team?name=${team.getName()}")
+
+        then: "a status code of 200 is returned"
+        response.status == 200
+
+        and: "The json is correct"
+        JSONAssert.assertEquals(expectedJson, response.body, true)
+    }
+
+    def "Test getting a team by id"() {
+        when: "request is sent"
+        def response = get("/team?name=${team.getTeamId()}")
+
+        then: "a status code of 200 is returned"
+        response.status == 200
+
+        and: "The json is correct"
+        response.body == """
+        {
+            "teamId": ${team.teamId},
+            "name": ${team.name},
+            "challengeNumber": ${team.challengeNumber},
+            "points": ${team.points},
+            "totalPoints": ${team.totalPoints}
+        }
+        """
+    }
+
+    def "Test getting a team by id not found"() {
+        when: "request is sent"
+        def response = get("/team?id=made-up")
+
+        then: "a status code of 400 is returned"
+        response.status == 400
+    }
+
+    def "Test getting a team by name not found"() {
+        when: "request is sent"
+        def response = get("/team?name=made-up")
+
+        then: "a status code of 400 is returned"
+        response.status == 400
     }
 
     def post(String path, String body) {
