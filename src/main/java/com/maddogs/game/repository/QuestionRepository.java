@@ -1,7 +1,6 @@
 package com.maddogs.game.repository;
 
 import com.maddogs.game.model.Question;
-import com.maddogs.game.model.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

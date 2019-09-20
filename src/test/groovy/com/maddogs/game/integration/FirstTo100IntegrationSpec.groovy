@@ -2,10 +2,9 @@ package com.maddogs.game.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.maddogs.game.model.Question
-import com.maddogs.game.model.Team
+
 import com.maddogs.game.repository.QuestionRepository
-import com.maddogs.game.repository.TeamRepository
-import org.skyscreamer.jsonassert.JSONAssert
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -22,9 +21,6 @@ class FirstTo100IntegrationSpec extends Specification {
     TestRestTemplate testRestTemplate
 
     @Autowired
-    TeamRepository teamRepository
-
-    @Autowired
     QuestionRepository questionRepository
 
     @Autowired
@@ -32,14 +28,7 @@ class FirstTo100IntegrationSpec extends Specification {
 
     Question question
 
-    Team team
-
     def setup() {
-        team = new Team()
-        team.setName("yo")
-        team.setChallengeNumber(2)
-        teamRepository.saveAndFlush(team)
-
         question = new Question()
         question.setQuestion("Breakfast items?")
         question.setAnswers(new ArrayList<>(Arrays.asList("bacon", "sausages", "egg")))
@@ -47,41 +36,7 @@ class FirstTo100IntegrationSpec extends Specification {
     }
 
     def cleanup() {
-        teamRepository.deleteAll()
         questionRepository.deleteAll()
-    }
-
-    def "Test sending a challenge"() {
-        when: "request is sent"
-        def response = post("/challenge", """
-            { 
-                "teamId": "${team.getTeamId()}",
-                "challengeNumber": 5
-            }
-        """)
-
-        then: "a status code of 200 is returned"
-        response.status == 200
-
-        and: "The challenge number has been set"
-        teamRepository.findById(team.getTeamId()).get().getChallengeNumber() == 5
-    }
-
-    def "Test getting team with highest challenge number"() {
-        given: "A higher challenging team"
-        Team braveTeam = new Team()
-        braveTeam.setName("bigger")
-        braveTeam.setChallengeNumber(7)
-        teamRepository.saveAndFlush(braveTeam)
-
-        when: "request is sent"
-        def response = get("/challenge")
-
-        then: "a status code of 200 is returned"
-        response.status == 200
-
-        and: "The bravest team is returned"
-        mapper.writeValueAsString(braveTeam) == response.getBody()
     }
 
     def "Test getting a question"() {
@@ -96,11 +51,8 @@ class FirstTo100IntegrationSpec extends Specification {
     }
 
     def "Test answering a question"() {
-        given: "A team has a certain amount of points"
-        int points = teamRepository.findById(team.getTeamId()).get().getPoints()
-
         when: "request is sent"
-        def response = post("/question/" + question.getQuestionId() + "/team/" + team.getTeamId(),
+        def response = post("/question/" + question.getQuestionId(),
                 """
         {
             "answer": "Sausages"
@@ -109,17 +61,11 @@ class FirstTo100IntegrationSpec extends Specification {
 
         then: "a status code of 202 is returned"
         response.status == 202
-
-        and: "The team gains a point"
-        teamRepository.findById(team.getTeamId()).get().getPoints() == points + 1
     }
 
     def "Test answering a question incorrectly"() {
-        given: "A team has a certain amount of points"
-        int points = teamRepository.findById(team.getTeamId()).get().getPoints()
-
         when: "request is sent"
-        def response = post("/question/" + question.getQuestionId() + "/team/" + team.getTeamId(),
+        def response = post("/question/" + question.getQuestionId(),
                 """
         {
             "answer": "nothing"
@@ -128,84 +74,6 @@ class FirstTo100IntegrationSpec extends Specification {
 
         then: "a status code of 405 is returned"
         response.status == 406
-
-        and: "The team gains a point"
-        teamRepository.findById(team.getTeamId()).get().getPoints() == points
-    }
-
-    def "Test sending a team"() {
-        when: "request is sent"
-        def response = post("/team", """
-            { 
-                "name": "sausage-team"
-            }
-        """)
-
-        then: "a status code of 200 is returned"
-        response.status == 200
-
-        and: "The team has been saved"
-        teamRepository.findByName("sausage-team") instanceof Team
-    }
-
-    def "Test getting a team by name"() {
-        given: "Some expected json"
-        String expectedJson = """
-        {
-            "teamId": ${team.teamId},
-            "name": ${team.name},
-            "challengeNumber": ${team.challengeNumber},
-            "points": ${team.points},
-            "totalPoints": ${team.totalPoints}
-        }
-        """
-
-        when: "request is sent"
-        def response = get("/team?name=${team.getName()}")
-
-        then: "a status code of 200 is returned"
-        response.status == 200
-
-        and: "The json is correct"
-        JSONAssert.assertEquals(expectedJson, response.body, true)
-    }
-
-    def "Test getting a team by id"() {
-        given: "Some expected json"
-        String expectedJson = """
-        {
-            "teamId": ${team.teamId},
-            "name": ${team.name},
-            "challengeNumber": ${team.challengeNumber},
-            "points": ${team.points},
-            "totalPoints": ${team.totalPoints}
-        }
-        """
-
-        when: "request is sent"
-        def response = get("/team?id=${team.getTeamId()}")
-
-        then: "a status code of 200 is returned"
-        response.status == 200
-
-        and: "The json is correct"
-        JSONAssert.assertEquals(expectedJson, response.body, true)
-    }
-
-    def "Test getting a team by id not found"() {
-        when: "request is sent"
-        def response = get("/team?id=made-up")
-
-        then: "a status code of 400 is returned"
-        response.status == 400
-    }
-
-    def "Test getting a team by name not found"() {
-        when: "request is sent"
-        def response = get("/team?name=made-up")
-
-        then: "a status code of 400 is returned"
-        response.status == 400
     }
 
     def post(String path, String body) {
