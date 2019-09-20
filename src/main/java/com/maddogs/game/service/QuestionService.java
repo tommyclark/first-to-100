@@ -20,6 +20,6 @@ public class QuestionService {
     }
 
     public Question getRandomQuestion() {
-        return questionRepository.findRandomQuestion();
+        return questionRepository.retrieveQuestionsInRandomOrder().get(0);
     }
 }

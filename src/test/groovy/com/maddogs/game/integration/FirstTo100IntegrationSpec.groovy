@@ -171,14 +171,8 @@ class FirstTo100IntegrationSpec extends Specification {
     }
 
     def "Test getting a team by id"() {
-        when: "request is sent"
-        def response = get("/team?name=${team.getTeamId()}")
-
-        then: "a status code of 200 is returned"
-        response.status == 200
-
-        and: "The json is correct"
-        response.body == """
+        given: "Some expected json"
+        String expectedJson = """
         {
             "teamId": ${team.teamId},
             "name": ${team.name},
@@ -187,6 +181,15 @@ class FirstTo100IntegrationSpec extends Specification {
             "totalPoints": ${team.totalPoints}
         }
         """
+
+        when: "request is sent"
+        def response = get("/team?id=${team.getTeamId()}")
+
+        then: "a status code of 200 is returned"
+        response.status == 200
+
+        and: "The json is correct"
+        JSONAssert.assertEquals(expectedJson, response.body, true)
     }
 
     def "Test getting a team by id not found"() {

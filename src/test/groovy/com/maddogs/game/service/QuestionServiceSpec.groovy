@@ -49,10 +49,20 @@ class QuestionServiceSpec extends Specification {
     }
 
     def "Test getting random question"() {
-        when: "Question service is called"
-        questionService.getRandomQuestion()
+        given: "A list of questions"
+        List<Question> questions = new ArrayList<Question>()
 
-        then: "Repository is called"
-        1 * questionRepository.findRandomQuestion()
+        and: "The list has a question in it"
+        Question question = new Question()
+        questions.add(question)
+
+        and: "The repository returns the list"
+        questionRepository.retrieveQuestionsInRandomOrder() >> questions
+
+        when: "Question service is called"
+        Question result = questionService.getRandomQuestion()
+
+        then: "The first item of the list is returned"
+        result == question
     }
 }
