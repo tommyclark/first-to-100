@@ -16,7 +16,9 @@ public class QuestionService {
 
     public boolean isAnswerCorrect(String questionId, String answer) {
         Question question = questionRepository.findById(questionId).get();
-        return question.getAnswers().contains(answer.toLowerCase());
+        return question.getAnswers().stream()
+                .map(String::toLowerCase)
+                .anyMatch(str -> str.equals(answer.toLowerCase()));
     }
 
     public Question getRandomQuestion() {

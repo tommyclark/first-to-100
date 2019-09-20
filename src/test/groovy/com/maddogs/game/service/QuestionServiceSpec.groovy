@@ -28,6 +28,26 @@ class QuestionServiceSpec extends Specification {
         correct
     }
 
+    def "Testing answer when correct but cases are different"() {
+        given: "A question"
+        Question question = new Question()
+
+        and: "The question has some answers"
+        question.setAnswers(new ArrayList<>(Arrays.asList("Bacon", "Sausages", "Egg")))
+
+        and: "A mock optional"
+        Optional optional = Optional.of(question)
+
+        and: "That question is returned by the repository"
+        questionRepository.findById("test-question-id") >> optional
+
+        when: "We check if an answer is correct"
+        boolean correct = questionService.isAnswerCorrect("test-question-id", "bacon")
+
+        then: "We can see the answer was correct"
+        correct
+    }
+
     def "Testing answer when incorrect"() {
         given: "A question"
         Question question = new Question()
