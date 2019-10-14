@@ -76,6 +76,14 @@ class FirstTo100IntegrationSpec extends Specification {
         response.status == 406
     }
 
+    def "Test the health endpoint"() {
+        when: "request is sent"
+        def response = get("/health")
+
+        then: "a status code of 200 is returned"
+        response.status == 200
+    }
+
     def post(String path, String body) {
         HttpHeaders headers = getAuthHeaders()
         headers.setContentType(MediaType.APPLICATION_JSON)
